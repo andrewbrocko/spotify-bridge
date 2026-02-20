@@ -15,10 +15,11 @@ async function getSpotifyToken() {
 }
 
 app.get('/search', async (req, res) => {
-    const query = req.query.q || 'Billie Eilish';
+    const query = req.query.q || 'Lofi'; 
     try {
         const token = await getSpotifyToken();
-        const response = await axios.get(`https://api.spotify.com/v1/search?q=$?q=${encodeURIComponent(query)}&type=track&limit=10`, {
+        // Usamos la URL limpia sin números raros que filtren datos
+        const response = await axios.get(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -26,8 +27,9 @@ app.get('/search', async (req, res) => {
             id: item.id,
             name: item.name,
             artist: item.artists[0].name,
-            albumArt: item.album.images[0].url,
-            previewUrl: item.preview_url
+            albumArt: item.album.images[0] ? item.album.images[0].url : '',
+            // ESTO ES LO QUE TIENE QUE APARECER:
+            previewUrl: item.preview_url || "No disponible para esta canción"
         }));
 
         res.json(tracks);
