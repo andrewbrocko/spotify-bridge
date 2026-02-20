@@ -15,42 +15,25 @@ async function getSpotifyToken() {
 }
 
 app.get('/search', async (req, res) => {
-  const query = req.query.q || 'Billie Eilish';
+    const query = req.query.q || 'Billie Eilish';
+    try {
+        const token = await getSpotifyToken();
+        const response = await axios.get(`https://api.spotify.com/v1/search?q=$?q=${encodeURIComponent(query)}&type=track&limit=10`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const tracks = response.data.tracks.items.map(item => ({
+            id: item.id,
+            name: item.name,
+            artist: item.artists[0].name,
+            albumArt: item.album.images[0].url,
+            previewUrl: item.preview_url
+        }));
 
-  try {
-    const token = await getSpotifyToken();
-
-    const response = await axios.get(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track,artist&limit=10`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
-    );
-
-    const tracks = response.data.tracks.items.map(item => ({
-      id: item.id,
-      name: item.name,
-      artist: item.artists[0].name,
-      artistId: item.artists[0].id,
-      albumArt: item.album.images[0]?.url ?? null,
-      previewUrl: item.preview_url,
-      spotifyUrl: item.external_urls.spotify
-    }));
-
-    const artists = response.data.artists.items.map(artist => ({
-      id: artist.id,
-      name: artist.name,
-      image: artist.images[0]?.url ?? null,
-      followers: artist.followers.total,
-      spotifyUrl: artist.external_urls.spotify
-    }));
-
-    res.json({ tracks, artists });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Spotify error' });
-  }
+        res.json(tracks);
+    } catch (error) {
+        res.status(500).json({ error: 'Error en la búsqueda', details: error.message });
+    }
 });
 
 module.exports = app;
