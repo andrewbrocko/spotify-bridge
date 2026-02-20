@@ -19,7 +19,6 @@ async function getSpotifyToken() {
         );
         return response.data.access_token;
     } catch (error) {
-        console.error("Error en token:", error.message);
         throw error;
     }
 }
@@ -28,21 +27,25 @@ app.get('/search', async (req, res) => {
     const query = req.query.q || 'Billie Eilish';
     try {
         const token = await getSpotifyToken();
+        // FIJATE BIEN: Lleva un $ antes de la llave. No lo borres.
         const response = await axios.get(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track,artist&limit=20`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
         const results = [];
+
         if (response.data.artists) {
             response.data.artists.items.forEach(artist => {
                 results.push({
                     id: artist.id,
                     name: artist.name,
                     artist: "Artista / Canal",
-                    albumArt: artist.images[0] ? artist.images[0].url : 'https://via.placeholder.com/150'
+                    albumArt: artist.images[0] ? artist.images[0].url : 'https://via.placeholder.com/150',
+                    previewUrl: null
                 });
             });
         }
+
         if (response.data.tracks) {
             response.data.tracks.items.forEach(track => {
                 results.push({
@@ -54,9 +57,13 @@ app.get('/search', async (req, res) => {
                 });
             });
         }
+
         res.json(results);
     } catch (error) {
-        res.status(500).json({ error: 'Error', details: error.response ? error.response.data : error.message });
+        res.status(500).json({ 
+            error: 'Error en el servidor', 
+            details: error.response ? error.response.data : error.message 
+        });
     }
 });
 
