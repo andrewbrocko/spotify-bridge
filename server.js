@@ -15,19 +15,20 @@ async function getSpotifyToken() {
 }
 
 app.get('/search', async (req, res) => {
-    const query = req.query.q || 'Billie Eilish';
+    const query = req.query.q || 'lofi hip hop'; // Ideal para tu Pomodoro
     try {
         const token = await getSpotifyToken();
-        const response = await axios.get(`https://api.spotify.com/v1/search?q=$?q=${encodeURIComponent(query)}&type=track&limit=10`, {
+        const response = await axios.get(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
+        // MIRA BIEN: Aquí incluimos el previewUrl para que SUENE
         const tracks = response.data.tracks.items.map(item => ({
             id: item.id,
             name: item.name,
             artist: item.artists[0].name,
             albumArt: item.album.images[0].url,
-            previewUrl: item.preview_url
+            audioUrl: item.preview_url // ESTO ES LO QUE PONE LA MÚSICA
         }));
 
         res.json(tracks);
