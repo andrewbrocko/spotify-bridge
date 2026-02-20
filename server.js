@@ -27,25 +27,25 @@ app.get('/search', async (req, res) => {
     const query = req.query.q || 'Billie Eilish';
     try {
         const token = await getSpotifyToken();
-        // FIJATE BIEN: Lleva un $ antes de la llave. No lo borres.
-        const response = await axios.get(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track,artist&limit=20`, {
+        
+        // MIRA BIEN AQUÍ: Lleva un $ antes de la llave. SI NO ESTÁ EL $, DA ERROR DE LÍMITE.
+        const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track,artist&limit=20`;
+        
+        const response = await axios.get(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
         const results = [];
-
         if (response.data.artists) {
             response.data.artists.items.forEach(artist => {
                 results.push({
                     id: artist.id,
                     name: artist.name,
                     artist: "Artista / Canal",
-                    albumArt: artist.images[0] ? artist.images[0].url : 'https://via.placeholder.com/150',
-                    previewUrl: null
+                    albumArt: artist.images[0] ? artist.images[0].url : 'https://via.placeholder.com/150'
                 });
             });
         }
-
         if (response.data.tracks) {
             response.data.tracks.items.forEach(track => {
                 results.push({
@@ -57,7 +57,6 @@ app.get('/search', async (req, res) => {
                 });
             });
         }
-
         res.json(results);
     } catch (error) {
         res.status(500).json({ 
