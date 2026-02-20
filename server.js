@@ -27,8 +27,6 @@ app.get('/search', async (req, res) => {
     const query = req.query.q || 'Billie Eilish';
     try {
         const token = await getSpotifyToken();
-        
-        // MIRA BIEN AQUÍ: Lleva un $ antes de la llave. SI NO ESTÁ EL $, DA ERROR DE LÍMITE.
         const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track,artist&limit=20`;
         
         const response = await axios.get(url, {
@@ -42,7 +40,8 @@ app.get('/search', async (req, res) => {
                     id: artist.id,
                     name: artist.name,
                     artist: "Artista / Canal",
-                    albumArt: artist.images[0] ? artist.images[0].url : 'https://via.placeholder.com/150'
+                    albumArt: artist.images[0] ? artist.images[0].url : 'https://via.placeholder.com/150',
+                    previewUrl: null
                 });
             });
         }
@@ -60,7 +59,7 @@ app.get('/search', async (req, res) => {
         res.json(results);
     } catch (error) {
         res.status(500).json({ 
-            error: 'Error en el servidor', 
+            error: 'Error', 
             details: error.response ? error.response.data : error.message 
         });
     }
