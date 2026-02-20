@@ -1,10 +1,8 @@
 const express = require('express');
 const axios = require('axios');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// Pon aquí tus credenciales del Dashboard de Spotify
-// Usa variables de entorno (Environment Variables)
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 
@@ -22,15 +20,11 @@ app.get('/token', async (req, res) => {
             }
         );
 
-        console.log("¡Token obtenido con éxito para el arquitecto!");
         res.json(response.data);
     } catch (error) {
-        console.error("Error pidiendo el token:", error.response ? error.response.data : error.message);
-        res.status(500).json({ error: 'No se pudo obtener el token' });
+        res.status(500).json({ error: 'Error de Spotify', details: error.response ? error.response.data : error.message });
     }
 });
 
-app.listen(port, () => {
-    console.log(`Servidor corriendo en http://localhost:${port}`);
-    console.log(`Usa tus lentes nuevos para leer esto bien, pibe.`);
-});
+// Esto es para que Vercel no se queje del puerto
+module.exports = app;
