@@ -5,7 +5,6 @@ const app = express();
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 
-// Función para obtener el token automáticamente
 async function getSpotifyToken() {
     const authHeader = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
     const response = await axios.post('https://accounts.spotify.com/api/token', 
@@ -15,22 +14,20 @@ async function getSpotifyToken() {
     return response.data.access_token;
 }
 
-// RUTA PARA BUSCAR: Esto te da carátulas y audio
 app.get('/search', async (req, res) => {
-    const query = req.query.q || 'Billie Eilish'; // Si no buscas nada, sale Billie
+    const query = req.query.q || 'Billie Eilish';
     try {
         const token = await getSpotifyToken();
-        const response = await axios.get(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`, {
+        const response = await axios.get(`https://api.spotify.com/v1/search?q=$?q=${encodeURIComponent(query)}&type=track&limit=10`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        // Limpiamos la respuesta para que tu SwiftUI no explote
         const tracks = response.data.tracks.items.map(item => ({
             id: item.id,
             name: item.name,
             artist: item.artists[0].name,
-            albumArt: item.album.images[0].url, // AQUÍ ESTÁ TU CARÁTULA
-            previewUrl: item.preview_url // AQUÍ ESTÁ TU AUDIO PARA EL PLAY
+            albumArt: item.album.images[0].url,
+            previewUrl: item.preview_url
         }));
 
         res.json(tracks);
