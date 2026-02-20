@@ -15,47 +15,42 @@ async function getSpotifyToken() {
 }
 
 app.get('/search', async (req, res) => {
-    const query = req.query.q || 'Billie Eilish';
-    try {
-        const token = await getSpotifyToken();
-        
-        // HE CAMBIADO ESTO PARA QUE NO TE DE ERROR 400
-        const spotifyUrl = 'https://api.spotify.com/v1/search?q=' + encodeURIComponent(query) + '&type=track,artist&limit=20';
-        
-        const response = await axios.get(spotifyUrl, {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        
-        let results = [];
-        
-        // 5 CANALES (ARTISTAS)
-        if (response.data.artists && response.data.artists.items) {
-            const artists = response.data.artists.items.slice(0, 5).map(item => ({
-                id: item.id,
-                name: item.name,
-                artist: "Canal / Artista",
-                albumArt: item.images[0] ? item.images[0].url : 'https://via.placeholder.com/150',
-                previewUrl: null
-            }));
-            results.push(...artists);
-        }
+  const query = req.query.q || 'Billie Eilish';
 
-        // 15 CANCIONES
-        if (response.data.tracks && response.data.tracks.items) {
-            const tracks = response.data.tracks.items.slice(0, 15).map(item => ({
-                id: item.id,
-                name: item.name,
-                artist: item.artists[0].name,
-                albumArt: item.album.images[0] ? item.album.images[0].url : 'https://via.placeholder.com/150',
-                previewUrl: item.preview_url
-            }));
-            results.push(...tracks);
-        }
+  try {
+    const token = await getSpotifyToken();
 
-        res.json(results);
-    } catch (error) {
-        res.status(500).json({ error: 'Error en la búsqueda', details: error.message });
-    }
+    const response = await axios.get(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track,artist&limit=10`,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+
+    const tracks = response.data.tracks.items.map(item => ({
+      id: item.id,
+      name: item.name,
+      artist: item.artists[0].name,
+      artistId: item.artists[0].id,
+      albumArt: item.album.images[0]?.url ?? null,
+      previewUrl: item.preview_url,
+      spotifyUrl: item.external_urls.spotify
+    }));
+
+    const artists = response.data.artists.items.map(artist => ({
+      id: artist.id,
+      name: artist.name,
+      image: artist.images[0]?.url ?? null,
+      followers: artist.followers.total,
+      spotifyUrl: artist.external_urls.spotify
+    }));
+
+    res.json({ tracks, artists });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Spotify error' });
+  }
 });
 
 module.exports = app;
